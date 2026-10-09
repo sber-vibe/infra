@@ -1,0 +1,8 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/sber-vibe/Backend.git
+	branch = main
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/sber-vibe/Frontend.git
+	branch = main
