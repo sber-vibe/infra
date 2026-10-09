@@ -15,7 +15,7 @@
 Нужны Git и Docker Desktop (или Docker Engine с Compose v2).
 
 ```sh
-git -c core.autocrlf=input clone --recursive https://github.com/sber-vibe/infra.git
+git clone --recursive https://github.com/sber-vibe/infra.git
 cd infra
 cp .env.example .env        # при необходимости поменять HTTP_PORT
 docker compose up -d --build
@@ -28,11 +28,7 @@ docker compose ps           # все сервисы должны быть health
 curl http://localhost/health  # {"status":"UP",...}
 ```
 
-> **Windows:** `-c core.autocrlf=input` обязателен, пока в `main` бэкенда не влит
-> [фикс переводов строк](https://github.com/sber-vibe/Backend/compare/main...feat/4-docker-compose).
-> Без него `gradlew` получает CRLF, и сборка образа падает с `./gradlew: not found`.
-> Если репозиторий уже склонирован без флага, выполните:
-> `git -C backend config core.autocrlf input && git -C backend rm -q --cached -r . && git -C backend reset -q --hard`.
+Если репозиторий склонирован без `--recursive`: `git submodule update --init`.
 
 Остановить: `docker compose down`.
 
