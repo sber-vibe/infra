@@ -1,0 +1,248 @@
+[
+  {
+    "id": "A01",
+    "requirement": "Д1",
+    "title": "Стенд отвечает /health",
+    "status": "PASS",
+    "expected": "200 {status: UP}",
+    "actual": "200 {\"groups\": [\"liveness\", \"readiness\"], \"status\": \"UP\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A02",
+    "requirement": "Д10",
+    "title": "Реестр типов документов содержит 8 видов",
+    "status": "FAIL",
+    "expected": "≥ 8 конфигурируемых типов (заявление, выписка, смета, справка ФНС, согласие, …)",
+    "actual": "200 [\"APPLICATION\", \"REGISTRATION_EXTRACT\", \"COST_ESTIMATE\"] — 3 типа(ов)",
+    "evidence": {}
+  },
+  {
+    "id": "A03",
+    "requirement": "Д3",
+    "title": "Создание проверки",
+    "status": "PASS",
+    "expected": "201 + id",
+    "actual": "201 {\"id\": \"fe5d7207-ac71-4e13-ab68-b4da6459f066\", \"applicantName\": \"ООО «Ромашка-Тех»\", \"inn\": \"6161234561\", \"projectName\": \"Цифровая платформа учёта\", \"requestedAmount\": 850000, \"createdAt\": \"2026-10-09T09:15:33.834379469Z…",
+    "evidence": {}
+  },
+  {
+    "id": "A04",
+    "requirement": "Д9",
+    "title": "Загрузка без указания типа (тип определяет сервер по содержимому)",
+    "status": "FAIL",
+    "expected": "201, detectedType=APPLICATION",
+    "actual": "400 {\"detail\": \"Required parameter 'type' is not present.\", \"instance\": \"/api/v1/applications/fe5d7207-ac71-4e13-ab68-b4da6459f066/documents\", \"status\": 400, \"title\": \"Bad Request\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A05",
+    "requirement": "Д3",
+    "title": "Загрузка пакета из 7 файлов (PDF, PDF-скан, JPG, PNG, DOCX) с ручным типом",
+    "status": "PASS",
+    "expected": "201 для каждого файла",
+    "actual": "1.pdf: 201; qwe.pdf: 201; scan4.jpg: 201; 2.pdf: 201; doc5.docx: 201; IMG_2031.png: 201; 7.pdf: 201",
+    "evidence": {}
+  },
+  {
+    "id": "A06",
+    "requirement": "Д10",
+    "title": "Каждый из видов документов можно указать/распознать",
+    "status": "FAIL",
+    "expected": "Справка ФНС, бизнес-план, реквизиты, доверенность — отдельные типы",
+    "actual": "нет подходящего типа, загружены как SUPPORTING_DOCUMENT: 2.pdf, doc5.docx, IMG_2031.png, 7.pdf",
+    "evidence": {}
+  },
+  {
+    "id": "A07",
+    "requirement": "Д5",
+    "title": "Документ содержит результат модели: тип, confidence, извлечённые поля",
+    "status": "FAIL",
+    "expected": "detectedType, confidence, fields[] (например inn, requested_amount)",
+    "actual": "поля документа: ['filename', 'id', 'size', 'type', 'uploadedAt']",
+    "evidence": {}
+  },
+  {
+    "id": "A08",
+    "requirement": "Д11",
+    "title": "Комплектность: нет согласия на обработку ПДн",
+    "status": "FAIL",
+    "expected": "замечание MISSING_DOCUMENT: Отсутствует согласие на обработку персональных данных",
+    "actual": "коды в отчёте: ['MANUAL_REVIEW_REQUIRED']",
+    "evidence": {}
+  },
+  {
+    "id": "A09",
+    "requirement": "Д11",
+    "title": "Арифметика: сумма заявления 850 000 > сметы 800 000",
+    "status": "FAIL",
+    "expected": "замечание AMOUNT_GT_COST: Запрошено 850000, смета 800000, разница 50000",
+    "actual": "коды в отчёте: ['MANUAL_REVIEW_REQUIRED']",
+    "evidence": {}
+  },
+  {
+    "id": "A10",
+    "requirement": "BONUS",
+    "title": "Сверка ИНН между заявлением и выпиской ЕГРЮЛ",
+    "status": "FAIL",
+    "expected": "замечание INN_MISMATCH: ИНН в заявлении 6161234561, в выписке ЕГРЮЛ 6161234562",
+    "actual": "коды в отчёте: ['MANUAL_REVIEW_REQUIRED']",
+    "evidence": {}
+  },
+  {
+    "id": "A11",
+    "requirement": "BONUS",
+    "title": "Срок действия справки ФНС истекает через 12 дней",
+    "status": "FAIL",
+    "expected": "замечание DOCUMENT_EXPIRES_SOON: Справка ФНС действительна до 21.10.2026 (12 дней)",
+    "actual": "коды в отчёте: ['MANUAL_REVIEW_REQUIRED']",
+    "evidence": {}
+  },
+  {
+    "id": "A12",
+    "requirement": "Д11",
+    "title": "Итоговый статус пакета с заложенными ошибками",
+    "status": "FAIL",
+    "expected": "пакет требует доработки (есть критические ошибки)",
+    "actual": "status=REVIEW_REQUIRED",
+    "evidence": {
+      "report": {
+        "status": "REVIEW_REQUIRED",
+        "checkedAt": "2026-10-09T09:15:34.137557913Z",
+        "findings": [
+          {
+            "code": "MANUAL_REVIEW_REQUIRED",
+            "message": "Проверена только комплектность. Содержание, подписи и соответствие регламенту требуют проверки экспертом.",
+            "documentType": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "A13",
+    "requirement": "Д4",
+    "title": "Проверка и документы сохраняются после перезапуска backend",
+    "status": "FAIL",
+    "expected": "200, те же документы и отчёт",
+    "actual": "404 {\"detail\": \"Application not found\", \"instance\": \"/api/v1/applications/fe5d7207-ac71-4e13-ab68-b4da6459f066\", \"status\": 404, \"title\": \"Not Found\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A14",
+    "requirement": "SCORE",
+    "title": "Специалист исправляет тип/поля документа (PATCH)",
+    "status": "FAIL",
+    "expected": "200 + пересчёт результата",
+    "actual": "405 {\"detail\": \"Method 'PATCH' is not supported.\", \"instance\": \"/api/v1/applications/6e0d62ac-6ca0-4158-bf2a-efc44f986493/documents/4fc0c614-a9d7-45b1-a553-eb12392729ea\", \"status\": 405, \"title\": \"Method Not Allowed\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A15",
+    "requirement": "Д3",
+    "title": "Оригинал отдаётся с исходным именем и типом",
+    "status": "FAIL",
+    "expected": "Content-Type по содержимому, filename=\"1.pdf\"",
+    "actual": "Content-Type: application/octet-stream; attachment; filename=\"4fc0c614-a9d7-45b1-a553-eb12392729ea.bin\"",
+    "evidence": {}
+  },
+  {
+    "id": "A16",
+    "requirement": "SCORE",
+    "title": "Оригинал закрыт: без авторизации доступ запрещён",
+    "status": "FAIL",
+    "expected": "401/403 без токена",
+    "actual": "200, 85026 байт без авторизации",
+    "evidence": {}
+  },
+  {
+    "id": "A17",
+    "requirement": "Д3",
+    "title": "Пограничный файл Смета расходов (копия).PDF: кириллица и верхний регистр расширения — должен приниматься",
+    "status": "PASS",
+    "expected": "201",
+    "actual": "201 {\"id\": \"1acb3abe-a42c-463f-92ad-4b2fa259b80e\", \"type\": \"COST_ESTIMATE\", \"filename\": \"Смета расходов (копия).PDF\", \"size\": 76602, \"uploadedAt\": \"2026-10-09T09:15:39.129552248Z\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A18",
+    "requirement": "Д3",
+    "title": "Пограничный файл empty.pdf: пустой файл — 400",
+    "status": "PASS",
+    "expected": "400",
+    "actual": "400 {\"detail\": \"File must not be empty\", \"instance\": \"/api/v1/applications/0ca7cb34-033d-4153-811d-3abab587f25b/documents\", \"status\": 400, \"title\": \"Bad Request\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A19",
+    "requirement": "Д3",
+    "title": "Пограничный файл big.pdf: 10,5 МиБ — 413 от backend",
+    "status": "PASS",
+    "expected": "413",
+    "actual": "413 {\"detail\": \"Maximum upload size exceeded\", \"instance\": \"/api/v1/applications/0ca7cb34-033d-4153-811d-3abab587f25b/documents\", \"status\": 413, \"title\": \"Content Too Large\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A20",
+    "requirement": "Д3",
+    "title": "Пограничный файл virus.exe: неподдерживаемый формат — 415",
+    "status": "PASS",
+    "expected": "415",
+    "actual": "415 {\"detail\": \"Allowed extensions: pdf, docx, txt, png, jpg, jpeg\", \"instance\": \"/api/v1/applications/0ca7cb34-033d-4153-811d-3abab587f25b/documents\", \"status\": 415, \"title\": \"Unsupported Media Type\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A21",
+    "requirement": "Д3",
+    "title": "Пограничный файл fake.pdf: PNG с расширением .pdf — содержимое не PDF; должен отклоняться или обрабатываться по сигнатуре",
+    "status": "FAIL",
+    "expected": "415",
+    "actual": "201 {\"id\": \"30c5f03f-cf77-41e9-83f2-359c97f96fb9\", \"type\": \"COST_ESTIMATE\", \"filename\": \"fake.pdf\", \"size\": 231952, \"uploadedAt\": \"2026-10-09T09:15:39.302158957Z\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A22",
+    "requirement": "Д9",
+    "title": "Имя «zayavlenie.pdf», внутри смета — тип по содержимому",
+    "status": "FAIL",
+    "expected": "detectedType=COST_ESTIMATE",
+    "actual": "400 {\"detail\": \"Required parameter 'type' is not present.\", \"instance\": \"/api/v1/applications/0ca7cb34-033d-4153-811d-3abab587f25b/documents\", \"status\": 400, \"title\": \"Bad Request\"}",
+    "evidence": {}
+  },
+  {
+    "id": "A23",
+    "requirement": "Д1",
+    "title": "Загрузки одной проверки не блокируют остальные проверки",
+    "status": "FAIL",
+    "expected": "201 для файла 9 МБ в другой проверке",
+    "actual": "в одну проверку 9 МБ: [201, 201, 201, 201, 201, 413] ({\"detail\": \"Demo storage limit exceeded\", \"instance\": \"/api/v1/applications/4363…); затем 9 МБ в другую проверку: 413 {\"detail\": \"Demo storage limit exceeded\", \"instance\": \"/api/v1/applications/6e0d62ac-6ca0-4158-bf2a-efc44f986493/documen…",
+    "evidence": {}
+  },
+  {
+    "id": "A24",
+    "requirement": "SCORE",
+    "title": "ИНН с неверной контрольной цифрой",
+    "status": "FAIL",
+    "expected": "400",
+    "actual": "201 {\"id\": \"1747fefd-f308-4b14-bc40-6dc32b2a0855\", \"applicantName\": \"ООО «Ромашка-Тех»\", \"inn\": \"1234567890\", \"projectName\":…",
+    "evidence": {}
+  },
+  {
+    "id": "A25",
+    "requirement": "SCORE",
+    "title": "Сумма с долями копейки",
+    "status": "FAIL",
+    "expected": "400",
+    "actual": "201 {\"id\": \"4472feb4-980f-4aa1-a237-803cc1a12c43\", \"applicantName\": \"ООО «Ромашка-Тех»\", \"inn\": \"6161234561\", \"projectName\":…",
+    "evidence": {}
+  },
+  {
+    "id": "A26",
+    "requirement": "SCORE",
+    "title": "Ошибка валидации указывает поле",
+    "status": "FAIL",
+    "expected": "Problem Details с указанием поля inn",
+    "actual": "400 {\"detail\": \"Invalid request content.\", \"instance\": \"/api/v1/applications\", \"status\": 400, \"title\": \"Bad Request\"}",
+    "evidence": {}
+  }
+]

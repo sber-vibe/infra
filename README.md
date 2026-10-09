@@ -76,6 +76,17 @@ docker compose up -d --build
 - E2E-сценарий специалиста из `frontend/e2e` (Playwright, десктоп и телефон) против стенда:
   `cd frontend && E2E_BASE_URL=http://localhost npm run e2e`.
 
+## Тестовый пакет и приёмка backend
+
+`testdata/package/` — синтетический пакет из 7 документов (PDF, PDF-скан, JPG, PNG, DOCX) с заложенными ошибками и пограничные файлы;
+правильные ответы — в `expected.json`. `testdata/acceptance.py` проверяет backend по требованиям кейса:
+
+```sh
+python testdata/acceptance.py --base http://localhost --restart "docker compose restart backend"
+```
+
+Результаты и список задач для backend: [docs/BACKEND_TEST_REPORT.md](docs/BACKEND_TEST_REPORT.md).
+
 ## Чего пока нет
 
 По [плану команды](https://github.com/sber-vibe/subsidy-checker/blob/main/IMPLEMENTATION_PLAN.md) в стенд ещё войдут PostgreSQL с volume (данные должны переживать перезапуск), Keycloak и локальная модель (Ollama).

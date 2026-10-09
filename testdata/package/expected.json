@@ -1,0 +1,102 @@
+{
+  "organization": "ООО «Ромашка-Тех»",
+  "inn": "6161234561",
+  "requested_amount": 850000,
+  "today": "2026-10-09",
+  "documents": {
+    "1.pdf": {
+      "type": "APPLICATION",
+      "fields": {
+        "company_name": "ООО «Ромашка-Тех»",
+        "inn": "6161234561",
+        "requested_amount": 850000,
+        "director": "Иванов И. И.",
+        "date": "2026-10-07"
+      }
+    },
+    "qwe.pdf": {
+      "type": "REGISTRATION_EXTRACT",
+      "fields": {
+        "company_name": "ООО «Ромашка-Тех»",
+        "inn": "6161234562",
+        "ogrn": "1196196012345",
+        "director": "Иванов Иван Иванович"
+      },
+      "note": "ИНН отличается от заявления последней цифрой — должна сработать сверка ИНН между документами"
+    },
+    "scan4.jpg": {
+      "type": "COST_ESTIMATE",
+      "fields": {
+        "total_cost": 800000,
+        "inn": "6161234561"
+      },
+      "note": "Запрошено 850 000, смета 800 000 — разница 50 000 (арифметическая проверка)"
+    },
+    "2.pdf": {
+      "type": "TAX_CERTIFICATE",
+      "fields": {
+        "inn": "6161234561",
+        "date": "2026-09-21",
+        "valid_until": "2026-10-21"
+      },
+      "note": "Скан без текстового слоя (нужен OCR); срок действия истекает через 12 дней — предупреждение"
+    },
+    "doc5.docx": {
+      "type": "BUSINESS_PLAN",
+      "fields": {
+        "total_cost": 800000,
+        "requested_amount": 850000
+      }
+    },
+    "IMG_2031.png": {
+      "type": "BANK_DETAILS",
+      "fields": {
+        "inn": "6161234561",
+        "account": "40702810952090012345",
+        "bik": "046015602"
+      }
+    },
+    "7.pdf": {
+      "type": "POWER_OF_ATTORNEY",
+      "fields": {
+        "inn": "6161234561"
+      }
+    }
+  },
+  "missing": [
+    "CONSENT"
+  ],
+  "planted_findings": [
+    {
+      "code": "MISSING_DOCUMENT",
+      "severity": "ERROR",
+      "document_type": "CONSENT",
+      "message": "Отсутствует согласие на обработку персональных данных"
+    },
+    {
+      "code": "AMOUNT_GT_COST",
+      "severity": "ERROR",
+      "message": "Запрошено 850000, смета 800000, разница 50000"
+    },
+    {
+      "code": "INN_MISMATCH",
+      "severity": "WARNING",
+      "message": "ИНН в заявлении 6161234561, в выписке ЕГРЮЛ 6161234562"
+    },
+    {
+      "code": "DOCUMENT_EXPIRES_SOON",
+      "severity": "WARNING",
+      "document_type": "TAX_CERTIFICATE",
+      "message": "Справка ФНС действительна до 21.10.2026 (12 дней)"
+    }
+  ],
+  "edge_cases": {
+    "Смета расходов (копия).PDF": "кириллица и верхний регистр расширения — должен приниматься",
+    "fake.pdf": "PNG с расширением .pdf — содержимое не PDF; должен отклоняться или обрабатываться по сигнатуре",
+    "empty.pdf": "пустой файл — 400",
+    "zayavlenie.pdf": "имя «заявление», внутри смета — тип должен определяться как COST_ESTIMATE",
+    "big.pdf": "10,5 МиБ — 413 от backend",
+    "notes.txt": "TXT — формат вне MVP (PDF/JPG/PNG), допустим только если поддержан осознанно",
+    "virus.exe": "неподдерживаемый формат — 415"
+  }
+}

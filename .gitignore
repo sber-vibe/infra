@@ -1,2 +1,5 @@
 .env
 .idea/
+testdata/package/edge-cases/big.pdf
+testdata/acceptance-result.json
+__pycache__/
