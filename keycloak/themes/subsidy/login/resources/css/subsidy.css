@@ -231,13 +231,30 @@ body.sc-body {
     }
 }
 
+/* выбор языка — компактно справа над заголовком, заголовок на всю ширину карточки */
 .sc-page .pf-v5-c-login__main-header {
     border-top: 0;
     padding: 0 0 20px;
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.sc-page .pf-v5-c-login__main-header-utilities {
+    align-self: flex-end;
+    margin: 0;
+}
+
+.sc-page .pf-v5-c-login__main-header-utilities .pf-v5-c-form-control {
+    min-height: 34px;
+    border-radius: 10px;
+}
+
+.sc-page .pf-v5-c-login__main-header-utilities .pf-v5-c-form-control > select {
+    padding: 6px 30px 6px 12px;
+    font-size: 13px;
+    color: var(--sc-text-2);
 }
 
 .sc-page .pf-v5-c-login__main-header .pf-v5-c-title {
@@ -261,6 +278,47 @@ body.sc-body {
 }
 
 .sc-page .pf-v5-c-login__main-header-utilities .pf-v5-c-form-control { width: auto; }
+
+/* страницы ошибки и информации: значок, текст и кнопка */
+.sc-page .sc-result {
+    display: grid;
+    justify-items: start;
+    gap: 16px;
+}
+
+.sc-page .sc-result__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+}
+
+.sc-page .sc-result__icon svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sc-page .sc-result--error .sc-result__icon { background: #fdeceb; color: var(--sc-danger); }
+.sc-page .sc-result--info .sc-result__icon { background: var(--sc-green-50); color: var(--sc-green); }
+
+.sc-page .sc-result__text {
+    margin: 0;
+    color: var(--sc-text-2);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.sc-page .sc-result__action {
+    margin-top: 8px;
+    text-align: center;
+    text-decoration: none;
+}
 
 /* поля */
 .sc-page .pf-v5-c-form__label-text {
@@ -408,3 +466,7 @@ body.sc-body {
     .sc-features li,
     .sc-page .pf-v5-c-login__main { animation: none !important; }
 }
+
+/* Edge/Яндекс Браузер добавляют свой «глаз» в поле пароля — рядом уже есть кнопка темы */
+.sc-page input::-ms-reveal,
+.sc-page input::-ms-clear { display: none; }

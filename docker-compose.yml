@@ -116,6 +116,9 @@ services:
       - ./keycloak/realm-subsidy.json:/opt/keycloak/data/import/realm-subsidy.json:ro
       # тема входа и писем в стиле рабочего места
       - ./keycloak/themes/subsidy:/opt/keycloak/themes/subsidy:ro
+    # сжатые копии стилей темы: в памяти, иначе после правки CSS Keycloak отдаёт старый gzip даже после перезапуска
+    tmpfs:
+      - /opt/keycloak/data/tmp/kc-gzip-cache:uid=1000,gid=0,mode=0770
     expose:
       - "8080"
     depends_on:
