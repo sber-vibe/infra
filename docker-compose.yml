@@ -1,4 +1,5 @@
 # Стенд «Проверка пакета документов на субсидию»: nginx → frontend (Next.js), backend (Spring Boot) и Keycloak.
+# Модель Qwen3-VL работает в Ollama на отдельном ПК в локальной сети, адрес которого задаёт OLLAMA_URL.
 # Запуск: docker compose up -d --build  →  http://localhost (порт задаётся HTTP_PORT)
 name: subsidy
 
@@ -33,6 +34,14 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI-http://keycloak:8080/kc/realms/subsidy/protocol/openid-connect/certs}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${SUBSIDY_PUBLIC_URL:-http://localhost}/kc/realms/subsidy
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES: subsidy-backend
+      # AI-модуль: модель Qwen3-VL в Ollama на отдельном ПК локальной сети (облачные AI API не используются).
+      # Если Ollama на этом же компьютере — http://host.docker.internal:11434
+      OLLAMA_URL: ${OLLAMA_URL:?задайте OLLAMA_URL в .env — адрес Ollama на ПК с моделью, например http://192.168.1.50:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3-vl:4b-instruct}
+      # ключ для прямого POST /api/v1/ai/analyze (заголовок X-Api-Key), не короче 32 символов; пусто — этот маршрут отвечает 503
+      AI_API_KEY: ${AI_API_KEY:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # наружу не публикуется: доступ только через nginx
     expose:
       - "8080"
