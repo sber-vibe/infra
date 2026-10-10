@@ -184,6 +184,8 @@ python testdata/acceptance.py --base http://localhost --restart "docker compose 
 
 ## Хранение и доступ
 
+Для подключения загрузок заявок к готовому AI API в локальной сети задайте в `.env` полный `AI_REMOTE_URL` (например `http://<адрес сервера>:8080/api/v1/ai/analyze`) и `AI_REMOTE_API_KEY`, затем выполните `docker compose up -d --build backend`. Backend отправляет оригинал документа как multipart с `X-Api-Key`; ключ не передаётся frontend и не сохраняется в Git. Если URL пуст, используется прямой Ollama. При недоступности сервера документ получает `FAILED` и допускает повторную обработку. Прямой локальный `/api/v1/ai/analyze` использует Ollama независимо от этого параметра.
+
 Backend хранит заявки, оригиналы, отчёты, решения, настройки и аудит в H2 на volume `backend-data` (`/app/data`). Перезапуск и пересборка сохраняют данные; `docker compose down -v` удаляет их. Для резервной копии остановите backend и сохраните каталог volume. Один экземпляр backend работает с этой БД.
 Ollama подключается через `OLLAMA_URL`; модель устанавливается отдельно на хосте. `AI_API_KEY` хранится только в локальном `.env`.
 

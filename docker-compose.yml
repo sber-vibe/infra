@@ -30,6 +30,8 @@ services:
       PORT: 8080
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
       STORAGE_JDBC_URL: jdbc:h2:file:/app/data/subsidy
+      AI_REMOTE_URL: ${AI_REMOTE_URL:-}
+      AI_REMOTE_API_KEY: ${AI_REMOTE_API_KEY:-}
       # проверка JWT от Keycloak: ключи берутся изнутри сети compose, issuer — публичный адрес из токена.
       # Пустой KEYCLOAK_JWK_SET_URI закрывает API с 503; открытый режим требует явного профиля dev.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI-http://keycloak:8080/kc/realms/subsidy/protocol/openid-connect/certs}
