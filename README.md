@@ -38,7 +38,7 @@ curl http://localhost/health  # {"status":"UP",...}
 | Путь | Куда | Примечание |
 |---|---|---|
 | `/` | frontend | рабочее место специалиста |
-| `/api/` | backend | тело запроса до 11 МБ (файл до 10 МБ + multipart); при превышении — `413` в формате Problem Details |
+| `/api/` | backend | тело запроса до 51 MiB (файл до 50 MiB + multipart); при превышении — `413` в формате Problem Details |
 | `/health` | backend `/actuator/health` | доступность без чувствительных данных |
 | `/kc/` | keycloak | вход специалистов (OIDC), консоль администратора `/kc/admin` |
 | `/nginx-health` | nginx | healthcheck самого прокси |
@@ -71,7 +71,7 @@ docker compose up -d --build
 | `KEYCLOAK_ADMIN`, `KEYCLOAK_ADMIN_PASSWORD` | `admin`, — | Администратор Keycloak (создаётся при первом запуске) |
 | `KEYCLOAK_DB_PASSWORD` | — | Пароль PostgreSQL для Keycloak |
 | `KEYCLOAK_DEMO_PASSWORD` | — | Пароль демо-пользователя `specialist` (роль `specialist`) |
-| `KEYCLOAK_JWK_SET_URI` | внутренний адрес Keycloak | JWKS для проверки токенов backend; пусто — API без проверки |
+| `KEYCLOAK_JWK_SET_URI` | внутренний адрес Keycloak | JWKS для проверки токенов backend; пусто — API закрыт с 503 |
 
 Переменные `NEXT_PUBLIC_*` встраиваются во frontend при сборке: после изменения выполните `docker compose build frontend`.
 Секреты в Git не добавляются, `.env` в `.gitignore`.
@@ -82,12 +82,12 @@ Realm `subsidy` импортируется из [`keycloak/realm-subsidy.json`](
 public client `subsidy-frontend` (Authorization Code + PKCE S256), роли `specialist` и `admin`, пользователь `specialist`.
 Данные Keycloak лежат в volume `keycloak-db`, поэтому повторный импорт существующий realm не перезаписывает.
 Чтобы применить изменения realm-файла или `SUBSIDY_PUBLIC_URL`, правьте realm в консоли или пересоздайте данные:
-`docker compose down -v && docker compose up -d --build` (удалит пользователей и сессии Keycloak).
+Предпочтительно менять существующий realm через консоль: удаление volumes уничтожает пользователей Keycloak и данные backend.
 
 Issuer: `${SUBSIDY_PUBLIC_URL}/kc/realms/subsidy` — он же `NEXT_PUBLIC_OIDC_ISSUER`. Путь `/kc`, а не `/auth`: на `/auth/callback` frontend принимает код.
 При смене порта или домена поменяйте `SUBSIDY_PUBLIC_URL` и `NEXT_PUBLIC_OIDC_ISSUER` вместе.
 Backend проверяет `Authorization: Bearer …` на `/api/**`: подпись по JWKS (`http://keycloak:8080/kc/...` внутри сети), issuer `${SUBSIDY_PUBLIC_URL}/kc/realms/subsidy`, audience `subsidy-backend`, роль `specialist` или `admin`.
-Пустой `KEYCLOAK_JWK_SET_URI=` в `.env` отключает проверку (демо-режим, API открыт).
+Пустой `KEYCLOAK_JWK_SET_URI=` в `.env` закрывает API с 503. Открытый локальный режим требует явного профиля backend `dev`.
 
 ## Проверено
 
@@ -107,7 +107,16 @@ python testdata/acceptance.py --base http://localhost --restart "docker compose 
 
 Результаты и список задач для backend: [docs/BACKEND_TEST_REPORT.md](docs/BACKEND_TEST_REPORT.md).
 
-## Чего пока нет
+## Хранение и доступ
 
-По [плану команды](https://github.com/sber-vibe/subsidy-checker/blob/main/IMPLEMENTATION_PLAN.md) в стенд ещё войдут PostgreSQL с volume для данных backend (должны переживать перезапуск) и локальная модель (Ollama).
-Текущий backend хранит данные в памяти и не использует БД. Добавлять неиспользуемые сервисы заранее не стали, их подключат вместе с поддержкой в backend.
+Backend хранит заявки, оригиналы, отчёты, решения, настройки и аудит в H2 на volume `backend-data` (`/app/data`). Перезапуск и пересборка сохраняют данные; `docker compose down -v` удаляет их. Для резервной копии остановите backend и сохраните каталог volume. Один экземпляр backend работает с этой БД.
+Ollama подключается через `OLLAMA_URL`; модель устанавливается отдельно на хосте. `AI_API_KEY` хранится только в локальном `.env`.
+
+Realm-роли разделены: `admin` управляет настройками и журналом, `specialist` работает с заявками. Очередь общая для специалистов. Пользователь без этих ролей не получает доступ к рабочим данным.
+Саморегистрация создаёт пользователя без рабочих ролей: после проверки заявки на доступ оператор назначает нужную роль в Keycloak. Демо-пользователь `specialist` имеет явную роль `specialist`.
+
+Для существующего realm импорт не обновляет роли. В консоли Keycloak выберите realm `subsidy`, Realm roles → `default-roles-subsidy` → Associated roles и удалите `specialist`. Не удаляйте явную роль у уже одобренных специалистов. Уже выданные токены сохраняют прежние роли до истечения срока; для немедленного применения завершите пользовательские сессии.
+
+Для администратора приложения используйте отдельного пользователя realm `subsidy` с единственной рабочей ролью `admin`, отдельным временным паролем и требованием UPDATE_PASSWORD. Учётная запись администратора master realm предназначена для консоли Keycloak. Автоматическое создание пользователя `subsidy-admin` в этот импорт не включено.
+
+Основные проверки новой реализации: backend `AdminPersistenceTest`, `JwtSecurityTest`, `UnconfiguredSecurityTest` и HTTP-проверка CRUD программ. Старые результаты E2E выше относятся к предыдущей сборке.

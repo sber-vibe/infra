@@ -28,11 +28,17 @@ services:
     environment:
       PORT: 8080
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
+      STORAGE_JDBC_URL: jdbc:h2:file:/app/data/subsidy
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3-vl:4b-instruct}
+      AI_API_KEY: ${AI_API_KEY:-}
       # проверка JWT от Keycloak: ключи берутся изнутри сети compose, issuer — публичный адрес из токена.
-      # Пустой KEYCLOAK_JWK_SET_URI — API открыт (демо-режим без Keycloak).
+      # Пустой KEYCLOAK_JWK_SET_URI закрывает API с 503; открытый режим требует явного профиля dev.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI-http://keycloak:8080/kc/realms/subsidy/protocol/openid-connect/certs}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${SUBSIDY_PUBLIC_URL:-http://localhost}/kc/realms/subsidy
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES: subsidy-backend
+    volumes:
+      - backend-data:/app/data
     # наружу не публикуется: доступ только через nginx
     expose:
       - "8080"
@@ -141,4 +147,5 @@ services:
       retries: 10
 
 volumes:
+  backend-data:
   keycloak-db:

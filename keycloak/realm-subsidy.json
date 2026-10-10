@@ -64,8 +64,7 @@
         "composites": {
           "realm": [
             "offline_access",
-            "uma_authorization",
-            "specialist"
+            "uma_authorization"
           ]
         }
       }
