@@ -120,6 +120,33 @@
             link.setAttribute("aria-disabled", "true");
         });
     </script>
+    <script type="module">
+        // Повторная отправка формы (двойной клик, пока Keycloak ждёт почтовый сервер) приводит к «Страница устарела»:
+        // после первой отправки кнопки блокируются и показывают, что запрос идёт.
+        document.addEventListener("submit", (event) => {
+            const form = event.target;
+            if (form.dataset.scSubmitted) {
+                event.preventDefault();
+                return;
+            }
+            form.dataset.scSubmitted = "true";
+            form.querySelectorAll("[type=submit]").forEach((button) => {
+                button.setAttribute("aria-disabled", "true");
+                button.classList.add("sc-busy");
+                if (button.tagName === "INPUT") button.value = "${msg("scSubmitting")?js_string}";
+                else button.textContent = "${msg("scSubmitting")?js_string}";
+            });
+        });
+        // вернулись «Назад» из кэша браузера — снимаем блокировку, чтобы форму можно было отправить
+        window.addEventListener("pageshow", (event) => {
+            if (!event.persisted) return;
+            document.querySelectorAll("form[data-sc-submitted]").forEach((form) => delete form.dataset.scSubmitted);
+            document.querySelectorAll(".sc-busy").forEach((button) => {
+                button.classList.remove("sc-busy");
+                button.removeAttribute("aria-disabled");
+            });
+        });
+    </script>
     <#if authenticationSession??>
         <script type="module">
             import { checkAuthSession } from "${url.resourcesPath}/js/authChecker.js";

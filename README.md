@@ -110,9 +110,10 @@ curl -X POST http://localhost/api/v1/ai/analyze -H "X-Api-Key: $AI_API_KEY" -F "
 | Путь | Куда | Примечание |
 |---|---|---|
 | `/` | frontend | рабочее место специалиста |
-| `/api/` | backend | тело запроса до 51 MiB (файл до 50 MiB + multipart); при превышении — `413` в формате Problem Details |
+| `/api/` | backend | тело запроса до 101 МБ (файл до 100 МБ + multipart); при превышении — `413` в формате Problem Details |
 | `/health` | backend `/actuator/health` | доступность без чувствительных данных |
 | `/kc/` | keycloak | вход специалистов (OIDC), консоль администратора `/kc/admin` |
+| `/mail/` | mailpit | локальный почтовый ящик: письма Keycloak (подтверждение почты, сброс пароля) |
 | `/nginx-health` | nginx | healthcheck самого прокси |
 | `/_next/static/` | frontend | кэш на год, имена файлов с хешами |
 
@@ -163,6 +164,17 @@ Issuer: `${SUBSIDY_PUBLIC_URL}/kc/realms/subsidy` — он же `NEXT_PUBLIC_OID
 При смене порта или домена поменяйте `SUBSIDY_PUBLIC_URL` и `NEXT_PUBLIC_OIDC_ISSUER` вместе.
 Backend проверяет `Authorization: Bearer …` на `/api/**`: подпись по JWKS (`http://keycloak:8080/kc/...` внутри сети), issuer `${SUBSIDY_PUBLIC_URL}/kc/realms/subsidy`, audience `subsidy-backend`, роль `specialist` или `admin`.
 Пустой `KEYCLOAK_JWK_SET_URI=` в `.env` закрывает API с 503. Открытый локальный режим требует явного профиля backend `dev`.
+
+### Почта
+
+Из сети стенда внешние SMTP-серверы (Яндекс, Mail.ru, Gmail) недоступны, поэтому по умолчанию Keycloak отправляет
+письма в локальный ящик **Mailpit**: http://localhost/mail/. Там видны письма подтверждения почты и сброса пароля,
+ссылку можно открыть прямо оттуда. Ящик открыт всем, кто достаёт до стенда, — для локального стенда это нормально.
+
+Настоящая почта, если SMTP доступен из сети стенда: задайте `SMTP_HOST`, `SMTP_PORT`, `SMTP_SSL`, `SMTP_AUTH`,
+`SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` в `.env` (пример для Яндекса в `.env.example`). Значения подставляются
+в realm только при первом импорте. Для уже созданного realm смените сервер в консоли: `/kc/admin` → realm
+`subsidy` → Realm settings → Email.
 
 ## Проверено
 

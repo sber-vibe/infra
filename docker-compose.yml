@@ -73,6 +73,7 @@ services:
         NEXT_PUBLIC_OIDC_ISSUER: ${NEXT_PUBLIC_OIDC_ISSUER:-}
         NEXT_PUBLIC_OIDC_CLIENT_ID: ${NEXT_PUBLIC_OIDC_CLIENT_ID:-}
         NEXT_PUBLIC_DEMO_LOGIN: ${NEXT_PUBLIC_DEMO_LOGIN:-false}
+        NEXT_PUBLIC_MAX_FILE_MB: ${NEXT_PUBLIC_MAX_FILE_MB:-100}
     restart: unless-stopped
     expose:
       - "3000"
@@ -107,11 +108,16 @@ services:
       # подставляются в realm-subsidy.json при импорте
       SUBSIDY_PUBLIC_URL: ${SUBSIDY_PUBLIC_URL:-http://localhost}
       KEYCLOAK_DEMO_PASSWORD: ${KEYCLOAK_DEMO_PASSWORD:?задайте KEYCLOAK_DEMO_PASSWORD в .env}
-      # письма регистрации и восстановления пароля — через SMTP Яндекса (SSL, порт 465)
-      YANDEX_SMTP_HOST: ${YANDEX_SMTP_HOST:-smtp.yandex.ru}
-      YANDEX_SMTP_PORT: ${YANDEX_SMTP_PORT:-465}
-      YANDEX_SMTP_USER: ${YANDEX_SMTP_USER:-}
-      YANDEX_SMTP_PASSWORD: ${YANDEX_SMTP_PASSWORD:-}
+      # письма регистрации и восстановления пароля. По умолчанию — локальный ящик mailpit (/mail/):
+      # внешние SMTP из сети стенда недоступны. Настоящая почта (Яндекс и т.п.) — переменные SMTP_* в .env.
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SSL: ${SMTP_SSL:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@subsidy.local}
     volumes:
       - ./keycloak/realm-subsidy.json:/opt/keycloak/data/import/realm-subsidy.json:ro
       # тема входа и писем в стиле рабочего места
@@ -138,6 +144,19 @@ services:
       timeout: 5s
       retries: 18
       start_period: 60s
+
+  # Локальный почтовый ящик: принимает все письма Keycloak, просмотр — http://<стенд>/mail/
+  mailpit:
+    image: axllent/mailpit:v1.31.2
+    restart: unless-stopped
+    environment:
+      MP_WEBROOT: /mail/
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    expose:
+      - "1025"
+      - "8025"
 
   keycloak-db:
     image: postgres:17-alpine
