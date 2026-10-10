@@ -1,0 +1,410 @@
+/* «СубсидияЧек»: фирменные цвета и раскладка страницы входа рабочего места поверх PatternFly 5 */
+:root {
+    --sc-green: #21a038;
+    --sc-green-600: #1a8c30;
+    --sc-green-700: #107f2c;
+    --sc-green-50: #e9f7ec;
+    --sc-bg: #f2f4f7;
+    --sc-text: #1f1f22;
+    --sc-text-2: #565b62;
+    --sc-border: #e1e4e8;
+    --sc-danger: #e5332a;
+    --sc-focus: rgba(33, 160, 56, 0.35);
+    --sc-hero: linear-gradient(120deg, #107f2c 0%, #21a038 45%, #1fb57d 75%, #0a9cc4 100%);
+
+    --pf-v5-global--FontFamily--text: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --pf-v5-global--FontFamily--heading: var(--pf-v5-global--FontFamily--text);
+    --pf-v5-global--primary-color--100: var(--sc-green);
+    --pf-v5-global--primary-color--200: var(--sc-green-700);
+    --pf-v5-global--link--Color: var(--sc-green-600);
+    --pf-v5-global--link--Color--hover: var(--sc-green-700);
+    --pf-v5-global--active-color--100: var(--sc-green);
+    --keycloak-card-top-color: transparent;
+}
+
+html,
+body.sc-body {
+    min-height: 100%;
+    background: var(--sc-bg) !important;
+    color: var(--sc-text);
+    font-family: var(--pf-v5-global--FontFamily--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* раскладка: панель бренда + форма; на телефоне панель сверху, карточка наезжает на неё */
+.sc-page {
+    display: grid;
+    min-height: 100dvh;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    overflow-x: hidden;
+}
+
+.sc-page > * { min-width: 0; }
+
+@media (min-width: 1024px) {
+    .sc-page {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        grid-template-rows: none;
+    }
+}
+
+.sc-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 28px 16px 72px;
+    background: var(--sc-hero);
+    background-size: 200% 200%;
+    animation: sc-gradient 14s ease-in-out infinite;
+    color: #fff;
+}
+
+@media (min-width: 768px) {
+    .sc-hero { padding: 40px 24px 80px; }
+}
+
+@media (min-width: 1024px) {
+    .sc-hero {
+        display: flex;
+        align-items: center;
+        padding: 56px;
+    }
+}
+
+.sc-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    pointer-events: none;
+}
+
+.sc-blob--1 {
+    width: 340px;
+    height: 340px;
+    right: -80px;
+    top: -80px;
+    background: #f2e913;
+    opacity: 0.35;
+    animation: sc-drift 12s ease-in-out infinite;
+}
+
+.sc-blob--2 {
+    width: 420px;
+    height: 420px;
+    left: -120px;
+    bottom: -180px;
+    background: #0087cd;
+    opacity: 0.55;
+    animation: sc-drift 16s ease-in-out infinite reverse;
+}
+
+.sc-hero__inner {
+    position: relative;
+    max-width: 560px;
+}
+
+.sc-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.sc-logo__mark { width: 36px; height: 36px; }
+.sc-logo__text b { font-weight: 800; }
+
+.sc-hero__title {
+    margin: 18px 0 0;
+    font-size: clamp(20px, 4.5vw, 30px);
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+@media (min-width: 1024px) {
+    .sc-hero__title {
+        margin-top: 32px;
+        font-size: clamp(30px, 3.2vw, 44px);
+    }
+}
+
+.sc-features {
+    display: none;
+    list-style: none;
+    padding: 0;
+    margin: 40px 0 0;
+    gap: 14px;
+}
+
+@media (min-width: 1024px) {
+    .sc-features { display: grid; }
+}
+
+.sc-features li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+    animation: sc-slide 0.5s ease-out both;
+}
+
+.sc-features li:nth-child(2) { animation-delay: 0.12s; }
+.sc-features li:nth-child(3) { animation-delay: 0.24s; }
+
+.sc-features b {
+    display: block;
+    color: #fff;
+    font-size: 15px;
+}
+
+.sc-features__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.sc-features__icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* колонка с карточкой формы */
+.sc-page .pf-v5-c-login {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 0;
+    padding: 0 16px 40px;
+    margin-top: -44px;
+    background: none;
+}
+
+@media (min-width: 1024px) {
+    .sc-page .pf-v5-c-login {
+        align-items: center;
+        margin-top: 0;
+        padding: 48px;
+    }
+}
+
+.sc-page .pf-v5-c-login__container {
+    display: block;
+    width: 100%;
+    max-width: 460px;
+    padding: 0;
+}
+
+.sc-page .pf-v5-c-login__main {
+    position: relative;
+    margin: 0;
+    padding: 28px 22px;
+    border-radius: 28px;
+    background: #fff;
+    box-shadow: 0 20px 48px rgba(16, 24, 40, 0.12);
+    animation: sc-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (min-width: 480px) {
+    .sc-page .pf-v5-c-login__main { padding: 36px; }
+}
+
+@media (min-width: 1024px) {
+    .sc-page .pf-v5-c-login__main {
+        box-shadow: 0 4px 12px rgba(16, 24, 40, 0.06), 0 12px 32px rgba(16, 24, 40, 0.06);
+    }
+}
+
+.sc-page .pf-v5-c-login__main-header {
+    border-top: 0;
+    padding: 0 0 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.sc-page .pf-v5-c-login__main-header .pf-v5-c-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--sc-text);
+}
+
+.sc-page .pf-v5-c-login__main-body,
+.sc-page .pf-v5-c-login__main-footer {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sc-page .pf-v5-c-login__main-footer-band {
+    border-top: 1px solid var(--sc-border);
+    color: var(--sc-text-2);
+    padding: 18px 0 0;
+    text-align: center;
+}
+
+.sc-page .pf-v5-c-login__main-header-utilities .pf-v5-c-form-control { width: auto; }
+
+/* поля */
+.sc-page .pf-v5-c-form__label-text {
+    font-weight: 600;
+    color: var(--sc-text);
+}
+
+.sc-page .pf-v5-c-form-control {
+    --pf-v5-c-form-control--before--BorderColor: var(--sc-border);
+    --pf-v5-c-form-control--after--BorderBottomColor: transparent;
+    --pf-v5-c-form-control--hover--after--BorderBottomColor: transparent;
+    --pf-v5-c-form-control--focus--after--BorderBottomColor: transparent;
+    border-radius: 12px;
+    background: #fff;
+    min-height: 46px;
+    transition: box-shadow 0.15s ease;
+}
+
+.sc-page .pf-v5-c-form-control::before,
+.sc-page .pf-v5-c-form-control::after { border-radius: 12px; }
+.sc-page .pf-v5-c-form-control:focus-within { box-shadow: 0 0 0 3px var(--sc-focus); }
+.sc-page .pf-v5-c-form-control:focus-within::before { border-color: var(--sc-green); }
+.sc-page .pf-v5-c-form-control.pf-m-error::before { border-color: var(--sc-danger); }
+
+.sc-page .pf-v5-c-form-control > input,
+.sc-page .pf-v5-c-form-control > select {
+    padding: 11px 14px;
+    font-size: 15px;
+}
+
+/* поля профиля при регистрации: класс стоит прямо на <input>, где ::before не рисуется — рамка своя */
+.sc-page input.pf-v5-c-form-control {
+    width: 100%;
+    padding: 11px 14px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--sc-text);
+    border: 1px solid var(--sc-border);
+    outline: none;
+}
+
+.sc-page input.pf-v5-c-form-control:focus {
+    border-color: var(--sc-green);
+    box-shadow: 0 0 0 3px var(--sc-focus);
+}
+
+.sc-page input.pf-v5-c-form-control[aria-invalid="true"] { border-color: var(--sc-danger); }
+
+.sc-page .pf-v5-c-form-control > input:focus,
+.sc-page .pf-v5-c-form-control > select:focus { outline: none; }
+
+.sc-page .pf-v5-c-input-group { gap: 8px; }
+
+.sc-page .pf-v5-c-input-group .pf-v5-c-button.pf-m-control {
+    border-radius: 12px;
+    border: 1px solid var(--sc-border);
+}
+
+.sc-page .pf-v5-c-input-group .pf-v5-c-button.pf-m-control::after { border: 0; }
+.sc-page .pf-v5-c-helper-text__item.pf-m-error { color: var(--sc-danger); }
+.sc-page .pf-v5-c-helper-text__item.pf-m-success { color: var(--sc-green-700); }
+
+.sc-page .pf-v5-c-check__input {
+    accent-color: var(--sc-green);
+    width: 18px;
+    height: 18px;
+}
+
+/* кнопки */
+.sc-page .pf-v5-c-button {
+    border-radius: 14px;
+    font-weight: 700;
+    transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sc-page .pf-v5-c-button.pf-m-primary {
+    --pf-v5-c-button--m-primary--BackgroundColor: var(--sc-green);
+    --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--sc-green-600);
+    --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--sc-green-600);
+    --pf-v5-c-button--m-primary--active--BackgroundColor: var(--sc-green-700);
+    padding: 13px 20px;
+    font-size: 16px;
+    box-shadow: 0 6px 16px rgba(33, 160, 56, 0.28);
+}
+
+.sc-page .pf-v5-c-button.pf-m-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(33, 160, 56, 0.32);
+}
+
+.sc-page .pf-v5-c-button.pf-m-primary:active { transform: none; }
+
+.sc-page .pf-v5-c-button.pf-m-secondary {
+    --pf-v5-c-button--m-secondary--Color: var(--sc-green-700);
+    --pf-v5-c-button--m-secondary--BackgroundColor: var(--sc-green-50);
+    --pf-v5-c-button--m-secondary--hover--Color: var(--sc-green-700);
+    --pf-v5-c-button--m-secondary--after--BorderColor: transparent;
+    --pf-v5-c-button--m-secondary--hover--after--BorderColor: transparent;
+    padding: 12px 20px;
+}
+
+.sc-page .pf-v5-c-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--sc-focus);
+}
+
+.sc-page a { font-weight: 600; }
+
+/* уведомления */
+.sc-page .pf-v5-c-alert {
+    border-radius: 14px;
+    border-top: 0;
+    box-shadow: none;
+    margin-bottom: 18px;
+}
+
+.sc-page .pf-v5-c-alert.pf-m-success { background: var(--sc-green-50); }
+.sc-page .pf-v5-c-alert.pf-m-danger { background: #fdeceb; }
+.sc-page .pf-v5-c-alert.pf-m-warning { background: #fef5e5; }
+.sc-page .pf-v5-c-alert.pf-m-info { background: #e6f3fa; }
+
+@keyframes sc-gradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes sc-drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(40px, 30px) scale(1.12); }
+}
+
+@keyframes sc-rise {
+    from { opacity: 0; transform: translateY(24px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-slide {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sc-hero,
+    .sc-blob,
+    .sc-features li,
+    .sc-page .pf-v5-c-login__main { animation: none !important; }
+}

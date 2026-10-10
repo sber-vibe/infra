@@ -1,0 +1,135 @@
+{
+  "realm": "subsidy",
+  "displayName": "Проверка пакета документов на субсидию",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": false,
+  "resetPasswordAllowed": true,
+  "verifyEmail": true,
+  "rememberMe": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+  "passwordPolicy": "length(8) and maxLength(64) and upperCase(1) and lowerCase(1) and digits(1) and notUsername and notEmail and passwordHistory(3)",
+  "loginTheme": "subsidy",
+  "emailTheme": "subsidy",
+  "actionTokenGeneratedByUserLifespan": 1800,
+  "smtpServer": {
+    "host": "${YANDEX_SMTP_HOST}",
+    "port": "${YANDEX_SMTP_PORT}",
+    "ssl": "true",
+    "starttls": "false",
+    "auth": "true",
+    "authType": "basic",
+    "user": "${YANDEX_SMTP_USER}",
+    "password": "${YANDEX_SMTP_PASSWORD}",
+    "from": "${YANDEX_SMTP_USER}",
+    "fromDisplayName": "СубсидияЧек",
+    "replyTo": "",
+    "envelopeFrom": ""
+  },
+  "enabled": true,
+  "sslRequired": "external",
+  "bruteForceProtected": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "ru",
+    "en"
+  ],
+  "defaultLocale": "ru",
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "offline_access",
+        "description": "${role_offline-access}"
+      },
+      {
+        "name": "uma_authorization",
+        "description": "${role_uma_authorization}"
+      },
+      {
+        "name": "specialist",
+        "description": "Специалист: проверяет пакеты документов"
+      },
+      {
+        "name": "admin",
+        "description": "Администратор стенда"
+      },
+      {
+        "name": "default-roles-subsidy",
+        "description": "Роли пользователя по умолчанию",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "offline_access",
+            "uma_authorization",
+            "specialist"
+          ]
+        }
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "subsidy-frontend",
+      "name": "Рабочее место специалиста",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "${SUBSIDY_PUBLIC_URL}",
+      "baseUrl": "/checks",
+      "redirectUris": [
+        "${SUBSIDY_PUBLIC_URL}/auth/callback"
+      ],
+      "webOrigins": [
+        "${SUBSIDY_PUBLIC_URL}"
+      ],
+      "protocolMappers": [
+        {
+          "name": "audience subsidy-backend",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "subsidy-backend",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${SUBSIDY_PUBLIC_URL}/login"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "specialist",
+      "firstName": "Демо",
+      "lastName": "Специалист",
+      "email": "specialist@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "realmRoles": [
+        "specialist"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${KEYCLOAK_DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "defaultRole": {
+    "name": "default-roles-subsidy"
+  }
+}

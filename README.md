@@ -5,6 +5,7 @@
 ```text
            :80 (HTTP_PORT)
 браузер ──► nginx ──┬── /api/*, /health ──► backend   (sber-vibe/Backend, Spring Boot, :8080)
+                    ├── /kc/*            ──► keycloak  (Keycloak 26, :8080) ──► keycloak-db (PostgreSQL)
                     └── всё остальное   ──► frontend  (sber-vibe/Frontend, Next.js, :3000)
 ```
 
@@ -39,6 +40,7 @@ curl http://localhost/health  # {"status":"UP",...}
 | `/` | frontend | рабочее место специалиста |
 | `/api/` | backend | тело запроса до 11 МБ (файл до 10 МБ + multipart); при превышении — `413` в формате Problem Details |
 | `/health` | backend `/actuator/health` | доступность без чувствительных данных |
+| `/kc/` | keycloak | вход специалистов (OIDC), консоль администратора `/kc/admin` |
 | `/nginx-health` | nginx | healthcheck самого прокси |
 | `/_next/static/` | frontend | кэш на год, имена файлов с хешами |
 
@@ -65,9 +67,27 @@ docker compose up -d --build
 | `NEXT_PUBLIC_AUTO_CLASSIFY` | `false` | `true`, когда backend сам определяет тип документа по содержимому |
 | `NEXT_PUBLIC_CONFIDENCE_THRESHOLD` | `0.8` | Порог пометки «требует подтверждения специалиста» |
 | `NEXT_PUBLIC_OIDC_ISSUER`, `NEXT_PUBLIC_OIDC_CLIENT_ID` | пусто | Keycloak; пусто — демо-вход |
+| `SUBSIDY_PUBLIC_URL` | `http://localhost` | Адрес стенда в браузере; от него строятся issuer и redirect URI Keycloak |
+| `KEYCLOAK_ADMIN`, `KEYCLOAK_ADMIN_PASSWORD` | `admin`, — | Администратор Keycloak (создаётся при первом запуске) |
+| `KEYCLOAK_DB_PASSWORD` | — | Пароль PostgreSQL для Keycloak |
+| `KEYCLOAK_DEMO_PASSWORD` | — | Пароль демо-пользователя `specialist` (роль `specialist`) |
+| `KEYCLOAK_JWK_SET_URI` | внутренний адрес Keycloak | JWKS для проверки токенов backend; пусто — API без проверки |
 
 Переменные `NEXT_PUBLIC_*` встраиваются во frontend при сборке: после изменения выполните `docker compose build frontend`.
 Секреты в Git не добавляются, `.env` в `.gitignore`.
+
+## Keycloak
+
+Realm `subsidy` импортируется из [`keycloak/realm-subsidy.json`](keycloak/realm-subsidy.json) при первом запуске:
+public client `subsidy-frontend` (Authorization Code + PKCE S256), роли `specialist` и `admin`, пользователь `specialist`.
+Данные Keycloak лежат в volume `keycloak-db`, поэтому повторный импорт существующий realm не перезаписывает.
+Чтобы применить изменения realm-файла или `SUBSIDY_PUBLIC_URL`, правьте realm в консоли или пересоздайте данные:
+`docker compose down -v && docker compose up -d --build` (удалит пользователей и сессии Keycloak).
+
+Issuer: `${SUBSIDY_PUBLIC_URL}/kc/realms/subsidy` — он же `NEXT_PUBLIC_OIDC_ISSUER`. Путь `/kc`, а не `/auth`: на `/auth/callback` frontend принимает код.
+При смене порта или домена поменяйте `SUBSIDY_PUBLIC_URL` и `NEXT_PUBLIC_OIDC_ISSUER` вместе.
+Backend проверяет `Authorization: Bearer …` на `/api/**`: подпись по JWKS (`http://keycloak:8080/kc/...` внутри сети), issuer `${SUBSIDY_PUBLIC_URL}/kc/realms/subsidy`, audience `subsidy-backend`, роль `specialist` или `admin`.
+Пустой `KEYCLOAK_JWK_SET_URI=` в `.env` отключает проверку (демо-режим, API открыт).
 
 ## Проверено
 
@@ -89,5 +109,5 @@ python testdata/acceptance.py --base http://localhost --restart "docker compose 
 
 ## Чего пока нет
 
-По [плану команды](https://github.com/sber-vibe/subsidy-checker/blob/main/IMPLEMENTATION_PLAN.md) в стенд ещё войдут PostgreSQL с volume (данные должны переживать перезапуск), Keycloak и локальная модель (Ollama).
+По [плану команды](https://github.com/sber-vibe/subsidy-checker/blob/main/IMPLEMENTATION_PLAN.md) в стенд ещё войдут PostgreSQL с volume для данных backend (должны переживать перезапуск) и локальная модель (Ollama).
 Текущий backend хранит данные в памяти и не использует БД. Добавлять неиспользуемые сервисы заранее не стали, их подключат вместе с поддержкой в backend.

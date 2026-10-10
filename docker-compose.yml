@@ -1,4 +1,4 @@
-# Стенд «Проверка пакета документов на субсидию»: nginx → frontend (Next.js) и backend (Spring Boot).
+# Стенд «Проверка пакета документов на субсидию»: nginx → frontend (Next.js), backend (Spring Boot) и Keycloak.
 # Запуск: docker compose up -d --build  →  http://localhost (порт задаётся HTTP_PORT)
 name: subsidy
 
@@ -28,6 +28,11 @@ services:
     environment:
       PORT: 8080
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
+      # проверка JWT от Keycloak: ключи берутся изнутри сети compose, issuer — публичный адрес из токена.
+      # Пустой KEYCLOAK_JWK_SET_URI — API открыт (демо-режим без Keycloak).
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI-http://keycloak:8080/kc/realms/subsidy/protocol/openid-connect/certs}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${SUBSIDY_PUBLIC_URL:-http://localhost}/kc/realms/subsidy
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES: subsidy-backend
     # наружу не публикуется: доступ только через nginx
     expose:
       - "8080"
@@ -65,3 +70,74 @@ services:
       timeout: 5s
       retries: 6
       start_period: 15s
+
+  # Keycloak: вход специалистов (OIDC). Доступен через nginx по пути /kc,
+  # realm subsidy импортируется из keycloak/realm-subsidy.json при первом запуске.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start", "--import-realm"]
+    restart: unless-stopped
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?задайте KEYCLOAK_DB_PASSWORD в .env}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?задайте KEYCLOAK_ADMIN_PASSWORD в .env}
+      # TLS терминируется перед стендом (или его нет на localhost); адрес берётся из X-Forwarded-* от nginx
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_RELATIVE_PATH: /kc
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME: ${SUBSIDY_PUBLIC_URL:-http://localhost}/kc
+      KC_HEALTH_ENABLED: "true"
+      # один узел — без кластерного кэша Infinispan
+      KC_CACHE: local
+      # подставляются в realm-subsidy.json при импорте
+      SUBSIDY_PUBLIC_URL: ${SUBSIDY_PUBLIC_URL:-http://localhost}
+      KEYCLOAK_DEMO_PASSWORD: ${KEYCLOAK_DEMO_PASSWORD:?задайте KEYCLOAK_DEMO_PASSWORD в .env}
+      # письма регистрации и восстановления пароля — через SMTP Яндекса (SSL, порт 465)
+      YANDEX_SMTP_HOST: ${YANDEX_SMTP_HOST:-smtp.yandex.ru}
+      YANDEX_SMTP_PORT: ${YANDEX_SMTP_PORT:-465}
+      YANDEX_SMTP_USER: ${YANDEX_SMTP_USER:-}
+      YANDEX_SMTP_PASSWORD: ${YANDEX_SMTP_PASSWORD:-}
+    volumes:
+      - ./keycloak/realm-subsidy.json:/opt/keycloak/data/import/realm-subsidy.json:ro
+      # тема входа и писем в стиле рабочего места
+      - ./keycloak/themes/subsidy:/opt/keycloak/themes/subsidy:ro
+    expose:
+      - "8080"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      # curl в образе нет; health отдаётся на management-порту 9000
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000 &&
+          printf 'GET /kc/health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
+          grep -q '"UP"' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 60s
+
+  keycloak-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?задайте KEYCLOAK_DB_PASSWORD в .env}
+    volumes:
+      - keycloak-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "keycloak", "-d", "keycloak"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  keycloak-db:
