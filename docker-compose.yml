@@ -39,7 +39,10 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES: subsidy-backend
       # AI-модуль: модель Qwen3-VL в Ollama на отдельном ПК локальной сети (облачные AI API не используются).
       # Если Ollama на этом же компьютере — http://host.docker.internal:11434
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3-vl:4b-instruct}
       # ключ для прямого POST /api/v1/ai/analyze (заголовок X-Api-Key), не короче 32 символов; пусто — этот маршрут отвечает 503
+      AI_API_KEY: ${AI_API_KEY:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

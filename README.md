@@ -1,5 +1,7 @@
 # infra — стенд «Проверка пакета документов на субсидию»
 
+Практическая документация по версиям backend/AI, подключению по локальной сети, запуску, ролям, почте и ограничениям: [docs/LOCAL_AI_SETUP.md](docs/LOCAL_AI_SETUP.md).
+
 Собирает репозитории организации [sber-vibe](https://github.com/sber-vibe) в один Docker Compose стенд за nginx.
 
 ```text
